@@ -1,0 +1,125 @@
+# Pipeline should only trigger on PRs
+trigger: none  # Disable CI trigger
+
+pr:  # Only trigger on pull requests
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - '**/*.ps1'
+      - '**/*.psm1'
+      - '**/*.psd1'
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  - group: StyleCheckSecrets
+
+steps:
+- checkout: self
+  fetchDepth: 0  # Get full history for accurate change detection
+  persistCredentials: true  # Required for PR comments
+
+- task: PowerShell@2
+  displayName: GetModifiedFiles
+  inputs:
+    targetType: 'inline'
+    script: |
+      Write-Host "Debug: Starting GetModifiedFiles"
+      Write-Host "Debug: Current directory is $(Get-Location)"
+      Write-Host "Debug: Build.Reason is $env:BUILD_REASON"
+      Write-Host "Debug: System.PullRequest.SourceBranch is $env:SYSTEM_PULLREQUEST_SOURCEBRANCH"
+      Write-Host "Debug: System.PullRequest.TargetBranch is $env:SYSTEM_PULLREQUEST_TARGETBRANCH"
+      Write-Host "Debug: Build.SourceBranch is $env:BUILD_SOURCEBRANCH"
+      
+      # Check if we're in a PR
+      if ($env:BUILD_REASON -ne "PullRequest") {
+          Write-Host "Not running in PR context. Pipeline should only run for PRs."
+          exit 0
+      }
+      
+      # Clean the branch names
+      $targetBranch = $env:SYSTEM_PULLREQUEST_TARGETBRANCH -replace '^refs/heads/', ''
+      Write-Host "Target branch (cleaned): $targetBranch"
+      
+      # Ensure we have the latest code
+      Write-Host "Fetching latest code..."
+      git fetch origin $targetBranch
+      if ($LASTEXITCODE -ne 0) {
+          Write-Error "Failed to fetch target branch"
+          exit 1
+      }
+      
+      # Get files changed in PR
+      Write-Host "Getting files changed in PR..."
+      $modifiedFiles = git diff --name-only "origin/$targetBranch" HEAD |
+          Where-Object { $_ -match '\.(ps1|psm1|psd1)$' }
+      
+      Write-Host "Found PowerShell files:"
+      if ($modifiedFiles) {
+          $modifiedFiles | ForEach-Object { Write-Host "  $_" }
+      } else {
+          Write-Host "  No PowerShell files modified"
+      }
+      
+      # Convert to JSON
+      $modifiedFilesJson = if ($modifiedFiles) {
+          $modifiedFiles | ConvertTo-Json -Compress
+      } else {
+          "[]"
+      }
+      
+      $artifactPath = Join-Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY "modifiedFiles.json"
+      $modifiedFilesJson | Out-File -FilePath $artifactPath -Encoding UTF8 -Force
+      Write-Host "Wrote file list to: $artifactPath"
+      Write-Host "File contents:"
+      Get-Content $artifactPath | Write-Host
+      
+      # Exit with success even if no files found
+      exit 0
+    pwsh: true
+    errorActionPreference: 'stop'
+
+- task: PowerShell@2
+  displayName: CheckPowerShellStyle
+  inputs:
+    targetType: 'inline'
+    script: |
+      Write-Host "Debug: Starting CheckPowerShellStyle"
+      $artifactPath = Join-Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY "modifiedFiles.json"
+      Write-Host "Looking for file at: $artifactPath"
+      Write-Host "File exists: $(Test-Path $artifactPath)"
+      
+      if (Test-Path $artifactPath) {
+          $modifiedFiles = Get-Content -Raw $artifactPath
+          Write-Host "File content found: $modifiedFiles"
+          try {
+              & "$(System.DefaultWorkingDirectory)/tests/Check_Styling.ps1" `
+                  -StylingGuidePath "$(System.DefaultWorkingDirectory)/tests/PowerShell_StylingGuide.json" `
+                  -ModifiedFiles $modifiedFiles `
+                  -OpenAIKey "$(OpenAIKey)"
+          }
+          catch {
+              if ($_.Exception.Message -like "*Style guide violations found*") {
+                  Write-Host "##vso[task.logissue type=error]Style guide violations found. See report for details."
+                  exit 1
+              }
+              throw
+          }
+      } else {
+          Write-Error "Modified files list not found at expected location"
+      }
+    pwsh: true
+  env:
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+# Publish style check report as artifact
+- task: PublishPipelineArtifact@1
+  condition: failed()  # Only publish if previous steps failed (meaning violations were found)
+  continueOnError: true  # Don't fail the build if publishing fails
+  inputs:
+    targetPath: '$(Build.ArtifactStagingDirectory)/StyleViolations.md'
+    artifact: 'StyleCheckReport'
+    publishLocation: 'pipeline'
