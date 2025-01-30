@@ -1,0 +1,194 @@
+{
+  "stylingGuide": {
+    "keywordsAndSyntax": {
+      "languageKeywords": {
+        "rules": "All PowerShell language keywords must be lowercase",
+        "examples": [
+          "foreach ($item in $collection)",
+          "if ($value -eq $true)",
+          "where-object { $_.name -match 'pattern' }",
+          "dynamicparam {}"
+        ]
+      },
+      "helpKeywords": {
+        "rules": "Keywords in comment-based help must be uppercase",
+        "examples": [
+          ".SYNOPSIS",
+          ".DESCRIPTION",
+          ".PARAMETER",
+          ".EXAMPLE",
+          ".INPUTS",
+          ".OUTPUTS",
+          ".NOTES"
+        ]
+      }
+    },
+    "namingConventions": {
+      "publicIdentifiers": {
+        "rules": "Use PascalCase for all public identifiers",
+        "examples": [
+          "function Get-Process {}",
+          "$Global:ConfigurationValue",
+          "$Script:LoggingPreference"
+        ]
+      },
+      "functionNaming": {
+        "rules": "Use Verb-Noun format with PascalCase for both parts",
+        "examples": [
+          "function Get-UserProfile {}",
+          "function Start-ProcessManager {}",
+          "function Update-ServiceConfiguration {}"
+        ]
+      },
+      "twoLetterAcronyms": {
+        "rules": "Capitalize both letters in two-letter acronyms",
+        "examples": [
+          "$PSDefaultParameterValues",
+          "Get-PSHost",
+          "$VMId"
+        ]
+      }
+    },
+    "codeStructure": {
+      "braceStyle": {
+        "rules": {
+          "openingBrace": "Place at end of line",
+          "closingBrace": "Place at beginning of line",
+          "exception": "Small scriptblocks passed as parameters"
+        },
+        "examples": [
+          "if ($value) {",
+          "    # code",
+          "}",
+          "Get-Process | Where-Object { $_.CPU -gt 10 }"
+        ]
+      },
+      "functionTemplate": {
+        "rules": "All functions must include CmdletBinding and standard blocks",
+        "example": [
+          "function Verb-Noun {",
+          "    [CmdletBinding()]",
+          "    param ()",
+          "    begin {",
+          "    }",
+          "    process {",
+          "    }",
+          "    end {",
+          "    }",
+          "}"
+        ]
+      }
+    },
+    "formatting": {
+      "lineLength": {
+        "rules": "Maximum 115 characters per line",
+        "examples": [
+          "Get-ChildItem -Path $LongPath |",
+          "    Where-Object { $_.Length -gt 100MB } |",
+          "    Select-Object Name, Length"
+        ]
+      },
+      "spacing": {
+        "rules": {
+          "parameters": "Single space around parameter names and operators",
+          "exceptions": ["Switch parameters", "Unary operators"]
+        },
+        "examples": [
+          "$result = Get-Content -Path $file -Wait:$true",
+          "$count++",
+          "$date = (Get-Date).AddDays(-1)"
+        ]
+      },
+      "whitespace": {
+        "rules": {
+          "noTrailing": "No trailing whitespace",
+          "subexpressions": "Single space inside braces/parentheses",
+          "avoidUnnecessary": "No spaces inside parentheses/brackets"
+        },
+        "examples": [
+          "$( Get-Process ).Count",
+          "${variable}",
+          "function Get-Example { $value }"
+        ]
+      }
+    },
+    "bestPractices": {
+      "returnValues": {
+        "rules": {
+          "noReturnKeyword": "Don't use return keyword",
+          "processBlockOutput": "Output objects in process block"
+        },
+        "example": [
+          "process {",
+          "    $result",
+          "}"
+        ]
+      },
+      "outputType": {
+        "rules": "Specify OutputType for advanced functions",
+        "examples": [
+          "[OutputType([System.String])]",
+          "[OutputType('System.IO.FileInfo', ParameterSetName = 'Path')]"
+        ]
+      },
+      "parameterSets": {
+        "rules": "Always provide DefaultParameterSetName when using parameter sets",
+        "example": [
+          "[CmdletBinding(DefaultParameterSetName = 'Path')]",
+          "param (",
+          "    [Parameter(ParameterSetName = 'Path')]",
+          "    [string]$Path,",
+          "    [Parameter(ParameterSetName = 'LiteralPath')]",
+          "    [string]$LiteralPath",
+          ")"
+        ]
+      },
+      "parameterValidation": {
+        "rules": "Use parameter validation attributes instead of body validation",
+        "examples": {
+          "allowNull": [
+            "param (",
+            "    [AllowNull()]",
+            "    [string]$ComputerName",
+            ")"
+          ],
+          "validateRange": [
+            "param (",
+            "    [ValidateRange(0, 100)]",
+            "    [int]$Percentage",
+            ")"
+          ],
+          "validateSet": [
+            "param (",
+            "    [ValidateSet('Low', 'Medium', 'High')]",
+            "    [string]$Priority",
+            ")"
+          ]
+        }
+      }
+    },
+    "documentation": {
+      "commentBasedHelp": {
+        "rules": "Place comment-based help inside function at the beginning",
+        "example": [
+          "function Get-Example {",
+          "    <#",
+          "    .SYNOPSIS",
+          "        Brief description",
+          "    .DESCRIPTION",
+          "        Detailed description",
+          "    .PARAMETER Name",
+          "        Parameter description",
+          "    .EXAMPLE",
+          "        Example usage",
+          "    #>",
+          "    [CmdletBinding()]",
+          "    param ()",
+          "    process {",
+          "    }",
+          "}"
+        ]
+      }
+    }
+  }
+}
