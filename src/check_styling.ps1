@@ -232,7 +232,7 @@ $($file.Violations)"
 
         $overviewComment += "
 
-Please review the file-specific comments above for detailed information about each violation."
+Please review the file-specific comments for detailed information about each violation."
         
         # Post overview comment
         Add-PullRequestComment -Content $overviewComment
