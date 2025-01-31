@@ -2,6 +2,8 @@
 
 Automate code style reviews in Azure DevOps using AI to detect violations, suggest fixes, and enforce team standards in your pull request pipeline.
 
+![example](/documents/codecheck.png) 
+
 ## Features
 
 - Automated code style checking on pull requests
