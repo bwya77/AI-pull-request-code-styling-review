@@ -1,15 +1,6 @@
 ## Keywords and Syntax
 
 ### Language Keywords
-- Rule: All PowerShell language keywords must be lowercase
-- Examples:
-  ```powershell
-  foreach ($item in $collection)
-  if ($value -eq $true)
-  where-object { $_.name -match 'pattern' }
-  dynamicparam {}
-  ```
-
 ### Help Keywords
 - Rule: Keywords in comment-based help must be uppercase
 - Examples:
