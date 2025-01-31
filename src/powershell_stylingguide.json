@@ -1,15 +1,6 @@
 {
   "stylingGuide": {
     "keywordsAndSyntax": {
-      "languageKeywords": {
-        "rules": "All PowerShell language keywords must be lowercase",
-        "examples": [
-          "foreach ($item in $collection)",
-          "if ($value -eq $true)",
-          "where-object { $_.name -match 'pattern' }",
-          "dynamicparam {}"
-        ]
-      },
       "helpKeywords": {
         "rules": "Keywords in comment-based help must be uppercase",
         "examples": [
@@ -54,7 +45,7 @@
         "rules": {
           "openingBrace": "Place at end of line",
           "closingBrace": "Place at beginning of line",
-          "exception": "Small scriptblocks passed as parameters"
+          "exception": "Small scriptblocks passed as parameters OR begin, process, end blocks"
         },
         "examples": [
           "if ($value) {",
@@ -116,7 +107,7 @@
       "returnValues": {
         "rules": {
           "noReturnKeyword": "Don't use return keyword",
-          "processBlockOutput": "Output objects in process block"
+          "processBlockOutput": "Output objects in process block without the return keyword"
         },
         "example": [
           "process {",
@@ -169,7 +160,7 @@
     },
     "documentation": {
       "commentBasedHelp": {
-        "rules": "Place comment-based help inside function at the beginning",
+        "rules": "Place comment-based help inside function at the beginning. All functions must have comment-based help",
         "example": [
           "function Get-Example {",
           "    <#",
